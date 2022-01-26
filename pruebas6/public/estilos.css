@@ -1,0 +1,31 @@
+body{
+    background: url(./images/night-g9646503fe_1920.jpg);
+    background-size: cover;
+    height: max-content;
+    
+}
+@font-face{
+    font-family:"simba";
+    src: url(./fonts/simba.otf);
+}
+.nav-priccipal-just{
+    margin-top: 80px;
+    margin-right: 150px;
+    
+}
+
+.nav-link{
+    font-family: simba;
+    font-style: simba;
+    margin-left: 20px;
+    margin-right: 20px;
+    font-style: simba;
+    color: rgb(110, 209, 110) !important;
+    font-size: 300%;
+    background-size: cover;
+}
+.btn-primary{
+    margin-top: 20px;
+    margin-right:20px;
+    margin-left: 20px;
+}
