@@ -57,11 +57,11 @@ export default {
     },
     balanceCuenta(){
       //connect.balance()
-      connect.getElemSale()
+      connect.balance()
     },
     
     ObtenerDataos(){
-      connect.getSale()
+      connect.tokens()
     }
   }
 

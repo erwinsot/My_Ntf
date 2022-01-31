@@ -7,7 +7,7 @@
 
     </div>
   <div>
-    
+   <!--  <img src="@/assets/logo.png" type="video/mp4"> -->
   </div>
    
   </div>

@@ -7,13 +7,20 @@ let visibilityid;
 
 function cerrarPop(){
   const overlay=document.getElementById("overlay")
+  
   overlay.classList.remove("active")
 }
-function obtenerPrice(){
+const obtenerPrice=async()=>{
   const price=document.getElementById("price").value
-  document.getElementById(visibilityid).disabled=true
+  const buttonCancel=document.getElementById("Sell"+visibilityid)
+  console.log("el id visibel es "+visibilityid)
+  console.log(buttonCancel.value)
+  //document.getElementById(visibilityid).disabled=true
   alert(price)
-  getSale(visibilityid,price)
+  var index=await getSale(visibilityid,price)
+  console.log("el indice es "+ index)
+  buttonCancel.value=index
+  console.log("el valor ahora del boton es "+buttonCancel.value)
   document.getElementById("price").value="";
   cerrarPop()
 }
@@ -26,18 +33,35 @@ function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
 }
 
-const getSale=async(tokenid,precio)=>{   ///pone en venta el ntf
+window.Buyntf=async(tokenid, precio) => {
+  console.log(typeof(tokenid,precio))
   const accounts = await web3.eth.getAccounts();
-  const bal=await Myntf.methods.createSell(accounts[0],tokenid,precio).send({
+  const index=await Myntf.methods.indexSell(tokenid).call({
     from: accounts[0]
   })
-  console.log(bal)
-  return bal
+  try {
+    console.log("instentando acceder al metodo")
+    await Myntf.methods.buyNtf(index).send({ from: accounts[0],value: precio });
+
+  } catch (err) {
+    alert(err.message);
+  
 }
 
+}
+
+const getSale=async(tokenid,precio)=>{   ///pone en venta el ntf
+  const accounts = await web3.eth.getAccounts();
+  const bal=await Myntf.methods.createSell(tokenid,precio).send({
+    from: accounts[0]
+  })
+  return bal.events.Index.returnValues.index
+}
+
+
 window.visibil=(id)=>{
-  visibilityid=id
-  console.log(visibilityid)
+ visibilityid=id
+ console.log(visibilityid)
  const overlay= document.getElementById("overlay")
  overlay.classList.add("active")
  
@@ -49,37 +73,60 @@ const getElemSale=async()=>{
   const bal=await Myntf.methods.paint().call({
     from: accounts[0]
   })
-  console.log(bal)
+  console.log("el elemnto de venta es "+ bal)
   console.log(bal.length)
   console.log(typeof(bal))
   for(var i=0; i<bal.length;i++){
+    if(bal[i][0]==0){
+      continue
+    }
     const bal2=await Myntf.methods.tokenURI(bal[i][1]).call({
     from: accounts[0]
    })
-   fetch (bal2)
-   .then(response=> response.json())
-   .then(data=>{
-     container.insertAdjacentHTML(
-        'beforeend',
-        `<div class="col" style="width: 20rem;">
-        <div class="card" style="width: 18rem;">
-        <img src="${data.image}" class="card-img-top" alt="...">
-        <div class="card-body">
-          <h5 class="card-title">Card title</h5>
-          <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-          <a href="#" class="btn btn-primary">Comprar</a>
-        </div>
-      </div>
+   const start=async function(){
+    const jsodata=await fetch(bal2)
+    .then(response => response.json())
+    .then(data=>{
+      return JSON.stringify(data)
+    })
+    return JSON.parse(jsodata);
+  }
+  const t =await start();
+  console.log(t)
+  container.insertAdjacentHTML(
+    'beforeend',
+    `<div class="col" style="width: 20rem;">
+    <div class="card" style="width: 18rem;">
+    <img src="${t.image}" class="card-img-top" alt="...">
+    <div class="card-body">
+      <h5 class="card-title">Nyf numero ${bal[i][1]}</h5>
+      <p class="card-text">${bal[i][2]}</p>
+      <button onclick="Buyntf('${bal[i][1]}','${bal[i][2]}')" type="button" class="btn btn-primary">
+        Buy now
+        </button>
+    </div>
+  </div>
 
-        </div>
-        `
-      )
-   })
+    </div>
+    `
+  )
   }
     
 }
-window.alerta=async() => {
-  alert("fumar")
+
+window.cancelSell=async(id)=>{
+  console.log("el id de cancellsell es "+id)
+  const accounts = await web3.eth.getAccounts();
+  const bal3=await Myntf.methods.cancelSale(id).send({
+    from: accounts[0]
+   });
+   console.log(bal3)
+}
+window.alerta=async(id) => {
+
+  alert("el id del axie es"+ id)
+  var idser=document.getElementById("Sell"+ id)
+  console.log(idser.value)
 }
 
 const getData=async () => {  //obtiene y pinta los ntf de cada uno
@@ -97,6 +144,8 @@ const getData=async () => {  //obtiene y pinta los ntf de cada uno
    const bal3=await Myntf.methods.viewOnSale(accounts[0]).call({
     from: accounts[0]
    });
+   
+   
    console.log(bal3)
    console.log("los id de los iten son " + bal2)
    console.log("bal2 es "+ typeof(bal2))
@@ -105,19 +154,22 @@ const getData=async () => {  //obtiene y pinta los ntf de cada uno
    const ids=bal2
    console.log("los ids son "+ ids)
    for(var i=0;i<bal.length;i++){
-     const start=async function(){
-       const jsodata=await fetch(bal[i])
-       .then(response => response.json())
-       .then(data=>{
-         return JSON.stringify(data)
-       })
-       
-       return JSON.parse(jsodata);
-     }
-     const t =await start();
-     console.log(t)
-     
-     
+    console.log("el valor del id es "+ bal2[i])
+    const bal4 =await Myntf.methods.indexSell(bal2[i]).call({
+      from: accounts[0]
+     });
+     console.log("el indice de la carat 2 es "+ bal4)
+    const start=async function(){
+      
+      const jsodata=await fetch(bal[i])
+      .then(response => response.json())
+      .then(data=>{
+        return JSON.stringify(data)
+      })
+      
+      return JSON.parse(jsodata);
+    }
+    const t =await start();
     container.insertAdjacentHTML(
       'beforeend',
       `<div class="col" style="width: 20rem;">
@@ -126,17 +178,23 @@ const getData=async () => {  //obtiene y pinta los ntf de cada uno
       <div  class="card-body" >
         <h5 class="card-title"  >Card title</h5>
         <p class="card-text">id del ntf ${bal2[i]} </p>
-        <button ${bal3[i] ? 'disabled' : ''} onclick="visibil('${bal2[i]}')"  id="${bal2[i]}" type="button" class="btn btn-primary">
-        Vender Ntf
+        <button  ${bal3[i] ? 'style="display:none"' : 'style="background-color:blue"'} onclick=" visibil('${bal2[i]}')" id="${bal2[i]}" type="button" class="btn btn-primary">
+        ${bal3[i] ? 'Cancel Sell' : 'Sell'}
+        </button>
+        <button  ${bal3[i] ?'style="background-color:red"' : 'style="display:none"'} onclick=" cancelSell('${bal4}')" id=" rojo ${bal2[i]}"  type="button" class="btn btn-primary">
+        ${bal3[i] ? 'Cancel Sell' : 'Sell'}
+        <input id="Sell${bal2[i]}"  style="display:none" value="John">
         </button>
       </div>
     </div>
+    
 
       </div>
       `
     )
    }
 }
+/* visibil('${bal2[i]}') */
 
 const connectWeb3 = async () => {
     let web3Provider;
@@ -182,15 +240,18 @@ const capture = async pokemonName => { //permite mintear
     } else { */
       try {
         console.log("instentando acceder al metodo")
-        await Myntf.methods.mint(pokemonName).send({ from: accounts[0],value: 50000000000000 });
+        const fer=await Myntf.methods.mint(pokemonName).send({ from: accounts[0],value: 50000000000000 });
         alert(`Listo, ahora eres dueño de ${pokemonName}`);
+        console.log(fer.events.Sold.returnValues)
       } catch (err) {
         alert(err.message);
       
     }
+    
+    
   };
   
-window.balance=async() =>{
+const balance=async() =>{
     const accounts = await web3.eth.getAccounts();
     console.log("entrando en balnce")
     try{
@@ -202,13 +263,5 @@ window.balance=async() =>{
       alert(err.message);
     }
   }
-
-
-  /* window.checkOwnership = async pokemonName => {
-    const accounts = await web3.eth.getAccounts();
-    return PokeCatcher.methods.isOwned(pokemonName).call({
-      from: accounts[0]
-    });
-  }; */
-
-  module.exports={connectWeb3, capture,getRandomArbitrary,getRandomInt,getData,getElemSale, cerrarPop,obtenerPrice};
+  
+  module.exports={connectWeb3, capture,getRandomArbitrary,getRandomInt,getData,getElemSale,balance ,cerrarPop,obtenerPrice};

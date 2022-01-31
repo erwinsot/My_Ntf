@@ -9,6 +9,7 @@ contract NftBuySucess is ERC721Enumerable, Ownable {
     mapping(uint256 => string) private _hashIPFS;
     uint256 price;
     mapping (uint256=>bool) private _onSale;
+    mapping(uint256=>uint256)private indexs;
     itemSale [] marketpla;
     itemSale item;
 
@@ -28,6 +29,8 @@ contract NftBuySucess is ERC721Enumerable, Ownable {
     
     event Sold(address buyer, uint256 amount);
 
+    event Index(uint256 index);
+
     function  balance() public view returns(uint256){
         return address(this).balance;
     }
@@ -39,6 +42,9 @@ contract NftBuySucess is ERC721Enumerable, Ownable {
             sales[i]=_onSale[ids[i]];
         }
         return sales;
+    }
+    function indexSell(uint256 tokenId) public view returns(uint256 ){
+        return indexs[tokenId];
     }
     function getbalance( ) public onlyOwner {
         payable(msg.sender).transfer(address(this).balance);
@@ -55,12 +61,22 @@ contract NftBuySucess is ERC721Enumerable, Ownable {
     }
 
 
-    function createSell(address _owners, uint256 tokenIds, uint256 _prices) public returns(bool success){
+    function createSell(uint256 tokenIds, uint256 _prices) public {
         require(ERC721.ownerOf(tokenIds)==msg.sender);
         require(!_onSale[tokenIds]);
-        item=itemSale(_owners,tokenIds,_prices);
+        item=itemSale(msg.sender,tokenIds,_prices);
         _onSale[tokenIds]=true;
         marketpla.push(item);
+        uint256 index=marketpla.length-1;
+        indexs[tokenIds]=marketpla.length-1;
+        emit Index(index);
+
+    }
+    function cancelSale(uint256 index) public returns( bool success){
+        require(marketpla[index]._owner==msg.sender);
+        require(_onSale[marketpla[index].tokenId]);
+        _onSale[marketpla[index].tokenId]=false;
+        delete marketpla[index];
         return true;
     }
     function paint() public view returns(itemSale[] memory)
@@ -123,13 +139,14 @@ contract NftBuySucess is ERC721Enumerable, Ownable {
     }
     function dataUri(address _owner)public view returns(string[] memory)
     {
+        
         uint256 ownerTokenCount = balanceOf(_owner);
         uint256[] memory ids=walletOfOwner(_owner);
         string[] memory ff= new string[](ownerTokenCount);
         for (uint256 i;i<ownerTokenCount;i++){
             ff[i]=tokenURI(ids[i]);
         }
-                return ff;
+                return (ff);
     }
 
     function _baseURI() internal view virtual override returns (string memory) {
